@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { phoneRegex } from "@/utils/regex";
+import { useState } from "react";
+import Loader from "@/components/Loader";
 
 const formSchema = z.object({
   firstName: z.string().min(2).max(50),
@@ -25,19 +27,22 @@ const formSchema = z.object({
 });
 
 const DealerForm = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      country: "The Netherlands",
-      city: "Amersfoort",
-      phoneNumber: "0640018293",
+      firstName: "",
+      lastName: "",
+      email: "",
+      country: "",
+      city: "",
+      phoneNumber: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
     const response = await fetch("/api/send", {
       method: "POST",
       headers: {
@@ -47,9 +52,13 @@ const DealerForm = () => {
     });
 
     const data = await response.json();
-    console.log(data);
+
+    form.reset();
+
     if (data) {
+      console.log(data);
       alert("form submitted");
+      setIsLoading(false);
     }
   };
 
@@ -93,10 +102,40 @@ const DealerForm = () => {
   ];
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-4">
-          {formFields.slice(0, 2).map((item) => {
+    <div className="relative">
+      <Form {...form}>
+        {isLoading && (
+          <div className="flex flex-col gap-3 items-center justify-center w-full h-full absolute top-0 left-0 bg-slate-100/70">
+            <Loader />
+            <p className="text-sm">Sending your email...</p>
+          </div>
+        )}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-4">
+            {formFields.slice(0, 2).map((item) => {
+              return (
+                <FormField
+                  key={item.id}
+                  control={form.control}
+                  name={item.id}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{item.label}</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="shadow"
+                          placeholder={item.placeholder}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              );
+            })}
+          </div>
+          {formFields.slice(2).map((item) => {
             return (
               <FormField
                 key={item.id}
@@ -118,32 +157,10 @@ const DealerForm = () => {
               />
             );
           })}
-        </div>
-        {formFields.slice(2).map((item) => {
-          return (
-            <FormField
-              key={item.id}
-              control={form.control}
-              name={item.id}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{item.label}</FormLabel>
-                  <FormControl>
-                    <Input
-                      className="shadow"
-                      placeholder={item.placeholder}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          );
-        })}
-        <Button type="submit">Submit form</Button>
-      </form>
-    </Form>
+          <Button type="submit">Submit form</Button>
+        </form>
+      </Form>
+    </div>
   );
 };
 
