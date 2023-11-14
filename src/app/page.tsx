@@ -28,26 +28,38 @@ const DealerForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      country: "",
-      city: "",
-      phoneNumber: "",
+      firstName: "John",
+      lastName: "Doe",
+      email: "john.doe@example.com",
+      country: "The Netherlands",
+      city: "Amersfoort",
+      phoneNumber: "0640018293",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const response = await fetch("/api/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    const data = await response.json();
+    console.log(data);
+    if (data) {
+      alert("form submitted");
+    }
   };
 
-  const formFields: {
+  type FormField = {
     id: "firstName" | "lastName" | "email" | "country" | "city" | "phoneNumber";
     label: string;
     placeholder: string;
-  }[] = [
+  };
+
+  const formFields: FormField[] = [
     {
       id: "firstName",
       label: "First Name",
@@ -94,7 +106,11 @@ const DealerForm = () => {
                   <FormItem>
                     <FormLabel>{item.label}</FormLabel>
                     <FormControl>
-                      <Input placeholder={item.placeholder} {...field} />
+                      <Input
+                        className="shadow"
+                        placeholder={item.placeholder}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,7 +129,11 @@ const DealerForm = () => {
                 <FormItem>
                   <FormLabel>{item.label}</FormLabel>
                   <FormControl>
-                    <Input placeholder={item.placeholder} {...field} />
+                    <Input
+                      className="shadow"
+                      placeholder={item.placeholder}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,7 +149,7 @@ const DealerForm = () => {
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-100">
       <div className="w-full lg:max-w-2xl p-24 ">
         <DealerForm />
       </div>
